@@ -51,7 +51,7 @@ class submission_form extends moodleform {
         
         // Check if required data is available
         if (!isset($this->_customdata['engelbrain']) || !isset($this->_customdata['cm'])) {
-            print_error('missingparameter');
+            \print_error('missingparameter');
             return;
         }
         
@@ -59,7 +59,7 @@ class submission_form extends moodleform {
         $cm = $this->_customdata['cm'];
         
         if (!is_object($cm) || !isset($cm->id)) {
-            print_error('invalidcoursemodule');
+            \print_error('invalidcoursemodule');
             return;
         }
         

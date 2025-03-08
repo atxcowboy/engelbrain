@@ -24,6 +24,7 @@
 
 require_once(__DIR__.'/../../config.php');
 require_once(__DIR__.'/lib.php');
+require_once(__DIR__.'/locallib.php');
 
 $id = required_param('id', PARAM_INT);
 

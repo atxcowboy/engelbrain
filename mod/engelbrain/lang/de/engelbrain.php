@@ -61,6 +61,13 @@ $string['submitwork'] = 'Arbeit einreichen';
 $string['submissioncontent'] = 'Einreichungsinhalt';
 $string['gradinginterface'] = 'Bewertungsschnittstelle';
 $string['nosubmissions'] = 'Noch keine Einreichungen';
+$string['submissionstatus'] = 'Einreichungsstatus';
+$string['status_submitted'] = 'Eingereicht';
+$string['submissiondate'] = 'Einreichungsdatum';
+$string['student'] = 'Student';
+$string['status'] = 'Status';
+$string['actions'] = 'Aktionen';
+$string['grade'] = 'Bewertung';
 
 // Datenschutz
 $string['privacy:metadata:engelbrain'] = 'Um mit klausurenweb.de zu integrieren, müssen Benutzerdaten mit diesem Dienst ausgetauscht werden.';

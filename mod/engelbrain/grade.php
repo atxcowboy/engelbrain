@@ -31,6 +31,8 @@ require_once($CFG->dirroot . '/lib/formslib.php');
 $id = required_param('id', PARAM_INT);
 // Submission id.
 $sid = required_param('sid', PARAM_INT);
+// Action to fetch automatic feedback.
+$fetch_api_feedback = optional_param('fetch_api_feedback', 0, PARAM_BOOL);
 
 // Get the course module.
 $cm = get_coursemodule_from_id('engelbrain', $id, 0, false, MUST_EXIST);
@@ -53,6 +55,83 @@ require_capability('mod/engelbrain:grade', $context);
 // Get the submission.
 $submission = $DB->get_record('engelbrain_submissions', array('id' => $sid, 'engelbrainid' => $engelbrain->id), '*', MUST_EXIST);
 $student = $DB->get_record('user', array('id' => $submission->userid), '*', MUST_EXIST);
+
+// Flag to track if an API operation was performed
+$api_operation_performed = false;
+$api_feedback_message = '';
+
+// Try to get API feedback if requested
+if ($fetch_api_feedback) {
+    try {
+        // Get API key - first try teacher API key, then school API key
+        $api_key = $engelbrain->teacher_api_key;
+        if (empty($api_key)) {
+            $api_key = get_config('mod_engelbrain', 'school_api_key');
+        }
+        
+        if (empty($api_key)) {
+            throw new \moodle_exception('No API key available. Please configure a teacher API key or school API key.');
+        }
+        
+        // Create API client
+        $api_client = new \mod_engelbrain\api\client($api_key);
+        
+        // Check if there's a submission ID stored from the API
+        if (!empty($submission->kw_submission_id)) {
+            // Get the feedback from the API for this submission
+            $feedback_data = $api_client->get_feedback($submission->kw_submission_id);
+            
+            // Update the submission with the feedback and grade from the API
+            if (!empty($feedback_data) && isset($feedback_data['feedback'])) {
+                $submission->feedback = $feedback_data['feedback'];
+                if (isset($feedback_data['score'])) {
+                    // Convert score to grade (assuming API returns score between 0-100)
+                    $submission->grade = $feedback_data['score'];
+                }
+                $submission->status = 'graded';
+                $submission->timemodified = time();
+                
+                // Save to database
+                $DB->update_record('engelbrain_submissions', $submission);
+                
+                $api_operation_performed = true;
+                $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
+            } else {
+                $api_feedback_message = 'Kein Feedback von klausurenweb.de verfügbar oder die Bewertung ist noch in Bearbeitung.';
+            }
+        } else {
+            // If no kw_submission_id exists, try to submit the content to the API first
+            $student_name = fullname($student);
+            $submission_content = $submission->submission_content;
+            
+            if (!empty($submission_content) && !empty($engelbrain->lerncode)) {
+                $metadata = array(
+                    'moodle_submission_id' => $submission->id,
+                    'course_id' => $course->id,
+                    'course_name' => $course->fullname,
+                    'activity_name' => $engelbrain->name
+                );
+                
+                $response = $api_client->submit_work($engelbrain->lerncode, $submission_content, $student_name, $metadata);
+                
+                if (!empty($response) && isset($response['id'])) {
+                    // Store the klausurenweb.de submission ID
+                    $submission->kw_submission_id = $response['id'];
+                    $DB->update_record('engelbrain_submissions', $submission);
+                    
+                    $api_operation_performed = true;
+                    $api_feedback_message = 'Die Einreichung wurde an klausurenweb.de übermittelt. Bitte aktualisieren Sie später, um das Feedback abzurufen.';
+                } else {
+                    $api_feedback_message = 'Fehler beim Übermitteln der Einreichung an klausurenweb.de.';
+                }
+            } else {
+                $api_feedback_message = 'Die Einreichung enthält keinen Inhalt oder es ist kein Lerncode konfiguriert.';
+            }
+        }
+    } catch (\Exception $e) {
+        $api_feedback_message = 'API-Fehler: ' . $e->getMessage();
+    }
+}
 
 // Define the grading form.
 class engelbrain_grading_form extends moodleform {
@@ -125,9 +204,41 @@ if ($data = $grading_form->get_data()) {
 echo $OUTPUT->header();
 echo $OUTPUT->heading('Einreichung bewerten');
 
+// Display API feedback message if any
+if (!empty($api_feedback_message)) {
+    $notification_type = $api_operation_performed ? 
+        \core\output\notification::NOTIFY_SUCCESS : 
+        \core\output\notification::NOTIFY_WARNING;
+    
+    echo $OUTPUT->notification($api_feedback_message, $notification_type);
+}
+
 // Display student information.
 echo html_writer::tag('p', 'Student: ' . fullname($student));
 echo html_writer::tag('p', 'Eingereicht am: ' . userdate($submission->timecreated));
+
+// Display API integration options.
+echo $OUTPUT->box_start('generalbox', 'api-options');
+echo html_writer::tag('h4', 'Automatische Bewertung mit klausurenweb.de');
+
+$api_url = new moodle_url('/mod/engelbrain/grade.php', array(
+    'id' => $cm->id, 
+    'sid' => $sid,
+    'fetch_api_feedback' => 1
+));
+
+echo html_writer::tag('p', 'Klicken Sie auf den Button unten, um die Einreichung an klausurenweb.de zu senden und automatisches Feedback zu erhalten.');
+echo html_writer::link(
+    $api_url,
+    'Automatisches Feedback holen',
+    array('class' => 'btn btn-primary')
+);
+
+if (!empty($submission->kw_submission_id)) {
+    echo html_writer::tag('p', 'klausurenweb.de Einreichungs-ID: ' . $submission->kw_submission_id, array('class' => 'mt-2'));
+}
+
+echo $OUTPUT->box_end();
 
 // Display the submission content.
 echo html_writer::tag('h4', 'Einreichungsinhalt');

@@ -1,4 +1,4 @@
-![Engel Brain Logo](engelbrain.png)
+![Engel Brain Logo](engelbrain-logo.png)
 
 _This README is available in both English and German._
 

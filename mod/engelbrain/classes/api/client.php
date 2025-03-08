@@ -58,7 +58,7 @@ class client {
             $this->endpoint = get_config('mod_engelbrain', 'api_endpoint');
             if (empty($this->endpoint)) {
                 // Use the default endpoint if no endpoint is set.
-                $this->endpoint = 'https://engelbrain.de/api/v1';
+                $this->endpoint = 'https://klausurenweb.de/api/v1';
             }
         } else {
             $this->endpoint = $endpoint;

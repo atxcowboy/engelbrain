@@ -33,10 +33,10 @@ $string['pluginadministration'] = 'engelbrain Administration';
 // Einstellungen
 $string['settings_header'] = 'engelbrain Integrationseinstellungen';
 $string['school_api_key'] = 'Schul-API-Schlüssel';
-$string['school_api_key_desc'] = 'Geben Sie den von engelbrain.de bereitgestellten Schul-API-Schlüssel ein';
+$string['school_api_key_desc'] = 'Geben Sie den von klausurenweb.de bereitgestellten Schul-API-Schlüssel ein';
 $string['api_endpoint'] = 'API-Endpunkt';
 $string['api_endpoint_desc'] = 'Die Endpunkt-URL für die engelbrain-API';
-$string['default_api_endpoint'] = 'https://engelbrain.de/api/v1';
+$string['default_api_endpoint'] = 'https://klausurenweb.de/api/v1';
 
 // Aktivitätseinstellungen
 $string['teacher_api_key'] = 'Lehrer-API-Schlüssel';

@@ -131,12 +131,14 @@ if ($submission) {
 // Display the grading interface for teachers.
 if (has_capability('mod/engelbrain:grade', $context)) {
     echo $OUTPUT->box_start('generalbox', 'grading-interface');
-    echo html_writer::tag('h3', get_string('gradinginterface', 'mod_engelbrain'));
+    echo html_writer::tag('h3', 'Bewertungsschnittstelle');
     
     // Get all submissions for this activity.
     $submissions = $DB->get_records('engelbrain_submissions', array('engelbrainid' => $engelbrain->id));
     
-    if ($submissions) {
+    if (empty($submissions)) {
+        echo html_writer::tag('p', 'Noch keine Einreichungen');
+    } else {
         // Create a table to display the submissions.
         $table = new html_table();
         $table->head = array(
@@ -168,8 +170,6 @@ if (has_capability('mod/engelbrain:grade', $context)) {
         
         // Display the table.
         echo html_writer::table($table);
-    } else {
-        echo html_writer::tag('p', get_string('nosubmissions', 'mod_engelbrain'));
     }
     
     echo $OUTPUT->box_end();

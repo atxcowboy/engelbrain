@@ -244,6 +244,7 @@ $api_url = new moodle_url('/mod/engelbrain/grade.php', array(
 ));
 
 echo html_writer::tag('p', 'Klicken Sie auf den Button unten, um die Einreichung an klausurenweb.de zu senden und automatisches Feedback zu erhalten.');
+echo html_writer::tag('p', '<strong>Hinweis:</strong> Die KI-gestützte Analyse kann bis zu 5 Minuten dauern. Bitte haben Sie Geduld und aktualisieren Sie die Seite nicht während der Verarbeitung.', array('class' => 'alert alert-info'));
 echo html_writer::link(
     $api_url,
     'Automatisches Feedback holen',

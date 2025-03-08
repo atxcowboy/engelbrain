@@ -119,12 +119,12 @@ class client {
         $curl->setHeader('X-API-Key: ' . $this->apikey);
         $curl->setHeader('Accept: application/json');
         
-        // Set a reasonable timeout
+        // Set timeout values - LLM responses can take several minutes
         $curl->setopt([
-            'CURLOPT_CONNECTTIMEOUT' => 10,   // 10 seconds connection timeout
-            'CURLOPT_TIMEOUT' => 30,          // 30 seconds total timeout
-            'CURLOPT_SSL_VERIFYPEER' => true, // Verify SSL
-            'CURLOPT_FAILONERROR' => false    // Don't fail on error HTTP status
+            'CURLOPT_CONNECTTIMEOUT' => 20,     // 20 seconds connection timeout
+            'CURLOPT_TIMEOUT' => 300,           // 5 minutes total timeout for LLM processing
+            'CURLOPT_SSL_VERIFYPEER' => true,   // Verify SSL
+            'CURLOPT_FAILONERROR' => false      // Don't fail on error HTTP status
         ]);
 
         $response = null;
@@ -141,7 +141,7 @@ class client {
         if ($curl->errno != 0) {
             $errormsg = "cURL error ({$curl->errno}): {$curl->error}";
             if ($curl->errno == CURLE_OPERATION_TIMEOUTED) {
-                $errormsg = "Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Bitte versuchen Sie es später erneut.";
+                $errormsg = "Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Die LLM-Verarbeitung kann bis zu 5 Minuten dauern. Bitte versuchen Sie es erneut oder prüfen Sie später das Ergebnis.";
             } else if ($curl->errno == CURLE_COULDNT_CONNECT || $curl->errno == CURLE_COULDNT_RESOLVE_HOST) {
                 $errormsg = "Verbindung zur klausurenweb.de API nicht möglich. Bitte überprüfen Sie Ihre Internetverbindung und die API-Einstellungen.";
             }

@@ -205,7 +205,7 @@ if ($fetch_api_feedback) {
 show_page:
 
 // Display API feedback message if any
-if (!empty($api_feedback_message) && strpos($OUTPUT->getContent(), $api_feedback_message) === false) {
+if (!empty($api_feedback_message)) {
     $notification_type = $api_operation_performed ? 
         \core\output\notification::NOTIFY_SUCCESS : 
         \core\output\notification::NOTIFY_WARNING;

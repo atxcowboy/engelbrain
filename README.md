@@ -95,7 +95,7 @@ This plugin is licensed under the GNU GPL v3. See the accompanying LICENSE file 
 # Deutsch
 # Engelbrain - Intelligente Textbewertung in Moodle
 
-Engelbrain ist ein Moodle-Plugin, das klausurenweb.de — ein automatisiertes, KI-unterstütztes Feedback- und Bewertungstool für sowohl handschriftliche als auch getippte Schülertexte — nahtlos in Ihre Moodle-Umgebung integriert. Der Name kombiniert "Engel" (Deutsch) und "brain" (Englisch für Intellekt) und symbolisiert eine unterstützende, aber intelligente Präsenz in Bildung und Bewertung. Durch die Nutzung der klausurenweb.de-API vereinfacht Engelbrain das Feedback zu Prüfungen, reduziert den Bewertungsaufwand und bietet zeitnahe Einblicke zur Verbesserung des Lernens und der Leistung der Schüler.
+Engelbrain ist ein Moodle-Plugin, das klausurenweb.de — ein automatisiertes, KI-unterstütztes Feedback- und Bewertungstool für sowohl handschriftliche als auch getippte Schülertexte — nahtlos per [API](https://klausurenweb.de/api-docs) in Ihre Moodle-Umgebung integriert. Der Name kombiniert "Engel" (Deutsch) und "brain" (Englisch für Intellekt) und symbolisiert eine unterstützende, aber intelligente Präsenz in Bildung und Bewertung. Durch die Nutzung der klausurenweb.de-API vereinfacht Engelbrain das Feedback zu Prüfungen, reduziert den Bewertungsaufwand und bietet zeitnahe Einblicke zur Verbesserung des Lernens und der Leistung der Schüler.
 
 Dieses Plugin ermöglicht die Integration von klausurenweb.de in Moodle. Moodle-Nutzer können damit:
 

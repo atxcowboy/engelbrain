@@ -141,8 +141,8 @@ if ($fetch_api_feedback) {
                     
                     $api_operation_performed = true;
                     $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
-                } else if (!empty($feedback_data) && $feedback_data['status'] === 'completed') {
-                    // Feedback ist verfügbar, aber anders strukturiert
+                } else if (!empty($feedback_data) && $feedback_data['status'] === 'graded') {
+                    // Alte API-Version unterstützen
                     $submission->feedback = isset($feedback_data['feedback_text']) ? $feedback_data['feedback_text'] : json_encode($feedback_data);
                     if (isset($feedback_data['score'])) {
                         // Convert score to grade (assuming API returns score between 0-100)
@@ -157,8 +157,10 @@ if ($fetch_api_feedback) {
                     $api_operation_performed = true;
                     $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
                 } else {
+                    // Für den Fall, dass noch kein Feedback verfügbar ist
+                    $status = isset($feedback_data['status']) ? $feedback_data['status'] : 'unbekannt';
                     $api_feedback_message = 'Kein Feedback von klausurenweb.de verfügbar oder die Bewertung ist noch in Bearbeitung. Status: ' . 
-                        (isset($feedback_data['status']) ? $feedback_data['status'] : 'unbekannt') . '. API-Antwort: ' . json_encode($feedback_data);
+                        $status . '. Sie können später erneut versuchen, das Feedback abzurufen.';
                     debugging('Leere Feedback-Antwort: ' . json_encode($feedback_data), DEBUG_DEVELOPER);
                 }
             } catch (\Exception $e) {

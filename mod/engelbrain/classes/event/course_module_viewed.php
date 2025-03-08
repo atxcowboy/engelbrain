@@ -34,11 +34,8 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class course_module_viewed extends \core\event\course_module_viewed {
-
     /**
-     * Init method.
-     *
-     * @return void
+     * Initialize the event
      */
     protected function init() {
         $this->data['objecttable'] = 'engelbrain';
@@ -60,9 +57,8 @@ class course_module_viewed extends \core\event\course_module_viewed {
      *
      * @return array|null
      */
-    protected function get_legacy_logdata() {
-        return array($this->courseid, 'engelbrain', 'view', 'view.php?id=' . $this->contextinstanceid,
-            $this->objectid, $this->contextinstanceid);
+    public static function get_legacy_eventname() {
+        return 'view';
     }
 
     /**
@@ -73,6 +69,7 @@ class course_module_viewed extends \core\event\course_module_viewed {
      */
     protected function validate_data() {
         parent::validate_data();
+        
         // Make sure this class is correctly used.
         if ($this->contextlevel != CONTEXT_MODULE) {
             throw new \coding_exception('Context level must be CONTEXT_MODULE.');

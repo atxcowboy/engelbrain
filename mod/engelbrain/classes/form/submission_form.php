@@ -15,91 +15,69 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The submission form for mod_engelbrain.
+ * The form for submitting work to engelbrain.
  *
- * @package     mod_engelbrain
- * @copyright   2025 Panomity GmbH
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_engelbrain
+ * @copyright  2025 Panomity GmbH
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_engelbrain\form;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->libdir.'/formslib.php');
+require_once($CFG->dirroot.'/mod/engelbrain/locallib.php');
+
+use moodleform;
+use context_module;
 
 /**
- * The submission form for mod_engelbrain.
+ * The form for submitting work to engelbrain.
  *
- * @package     mod_engelbrain
- * @copyright   2025 Panomity GmbH
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_engelbrain
+ * @copyright  2025 Panomity GmbH
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class submission_form extends \moodleform {
+class submission_form extends moodleform {
+
     /**
-     * Define the form elements.
+     * Define the form.
      */
     public function definition() {
         global $CFG;
-
+        
         $mform = $this->_form;
-        $customdata = $this->_customdata;
+        $engelbrain = $this->_customdata['engelbrain'];
+        $cm = $this->_customdata['cm'];
+        $context = context_module::instance($cm->id);
         
-        // Get the activity and submission data.
-        $cmid = $customdata['id'];
-        $engelbrain = $customdata['engelbrain'];
-        $submission = $customdata['submission'] ?? null;
-        
-        // Add a hidden field for the course module ID.
-        $mform->addElement('hidden', 'id', $cmid);
-        $mform->setType('id', PARAM_INT);
-        
-        // Add a text editor for the submission content.
-        $mform->addElement('editor', 'submission_content', get_string('submissioncontent', 'mod_engelbrain'), array('rows' => 10), array(
-            'maxfiles' => EDITOR_UNLIMITED_FILES,
-            'noclean' => true,
-            'context' => context_module::instance($cmid),
-            'subdirs' => true
-        ));
+        // Add the submission content field.
+        $mform->addElement('editor', 'submission_content', get_string('submissioncontent', 'mod_engelbrain'), 
+            array('rows' => 15), array('maxfiles' => EDITOR_UNLIMITED_FILES, 
+            'noclean' => true, 'context' => $context, 'subdirs' => true));
         $mform->setType('submission_content', PARAM_RAW);
         $mform->addRule('submission_content', get_string('required'), 'required', null, 'client');
         
-        // If there's an existing submission, set the default value.
-        if ($submission && !empty($submission->submission_content)) {
-            $mform->setDefault('submission_content', array(
-                'text' => $submission->submission_content,
-                'format' => FORMAT_HTML
-            ));
-        }
-        
-        // Add file upload for the submission.
-        $mform->addElement('filemanager', 'submission_files', get_string('submissionfiles', 'mod_engelbrain'), null, array(
-            'subdirs' => 0,
-            'maxbytes' => get_config('mod_engelbrain', 'maxbytes') ?? $CFG->maxbytes,
-            'maxfiles' => 10,
-            'accepted_types' => array('.pdf', '.doc', '.docx', '.txt')
-        ));
-        
-        // Add the submission button.
-        $submitlabel = $submission ? get_string('updatesubmission', 'mod_engelbrain') : get_string('savesubmission', 'mod_engelbrain');
-        $mform->addElement('submit', 'submitbutton', $submitlabel);
+        // Add the submission buttons.
+        $buttonarray = array();
+        $buttonarray[] = $mform->createElement('submit', 'submitbutton', get_string('submitwork', 'mod_engelbrain'));
+        $buttonarray[] = $mform->createElement('cancel');
+        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
     }
-
+    
     /**
      * Validate the form data.
      *
-     * @param array $data The form data
-     * @param array $files The form files
-     * @return array The errors array
+     * @param array $data form data
+     * @param array $files form files
+     * @return array errors
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-
-        // Make sure the submission is not empty.
-        if (empty($data['submission_content']['text'])) {
-            $errors['submission_content'] = get_string('required');
-        }
-
+        
+        // Add your custom validation here if needed.
+        
         return $errors;
     }
 } 

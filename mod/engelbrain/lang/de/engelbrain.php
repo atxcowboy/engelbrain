@@ -54,6 +54,11 @@ $string['submit_to_engelbrain'] = 'An klausurenweb.de übermitteln';
 $string['submission_successful'] = 'Erfolgreich an klausurenweb.de übermittelt';
 $string['submission_failed'] = 'Übermittlung an klausurenweb.de fehlgeschlagen: {$a}';
 $string['feedback_from_engelbrain'] = 'Feedback von klausurenweb.de';
+$string['submissions'] = 'Einreichungen';
+$string['feedback'] = 'Feedback';
+$string['view_submissions'] = 'Einreichungen anzeigen';
+$string['submitwork'] = 'Arbeit einreichen';
+$string['submissioncontent'] = 'Einreichungsinhalt';
 
 // Datenschutz
 $string['privacy:metadata:engelbrain'] = 'Um mit klausurenweb.de zu integrieren, müssen Benutzerdaten mit diesem Dienst ausgetauscht werden.';

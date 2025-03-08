@@ -54,6 +54,11 @@ $string['submit_to_engelbrain'] = 'Submit to klausurenweb.de';
 $string['submission_successful'] = 'Successfully submitted to klausurenweb.de';
 $string['submission_failed'] = 'Failed to submit to klausurenweb.de: {$a}';
 $string['feedback_from_engelbrain'] = 'Feedback from klausurenweb.de';
+$string['submissions'] = 'Submissions';
+$string['feedback'] = 'Feedback';
+$string['view_submissions'] = 'View submissions';
+$string['submitwork'] = 'Submit work';
+$string['submissioncontent'] = 'Submission content';
 
 // Privacy
 $string['privacy:metadata:engelbrain'] = 'In order to integrate with klausurenweb.de, user data needs to be exchanged with that service.';

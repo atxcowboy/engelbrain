@@ -48,8 +48,21 @@ class submission_form extends moodleform {
         global $CFG;
         
         $mform = $this->_form;
+        
+        // Check if required data is available
+        if (!isset($this->_customdata['engelbrain']) || !isset($this->_customdata['cm'])) {
+            print_error('missingparameter');
+            return;
+        }
+        
         $engelbrain = $this->_customdata['engelbrain'];
         $cm = $this->_customdata['cm'];
+        
+        if (!is_object($cm) || !isset($cm->id)) {
+            print_error('invalidcoursemodule');
+            return;
+        }
+        
         $context = context_module::instance($cm->id);
         
         // Add the submission content field.

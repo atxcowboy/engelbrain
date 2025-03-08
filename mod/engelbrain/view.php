@@ -34,20 +34,22 @@ $cm = get_coursemodule_from_id('engelbrain', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $engelbrain = $DB->get_record('engelbrain', array('id' => $cm->instance), '*', MUST_EXIST);
 
+// Check if the user has access to the activity.
+require_login($course, true, $cm);
+
 // Set up the page.
 $PAGE->set_url('/mod/engelbrain/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($engelbrain->name));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->set_context(context_module::instance($cm->id));
+$context = context_module::instance($cm->id);
+$PAGE->set_context($context);
 
-// Check if the user has access to the activity.
-require_login($course, true, $cm);
-require_capability('mod/engelbrain:view', $PAGE->context);
+require_capability('mod/engelbrain:view', $context);
 
 // Trigger the course module viewed event.
 $event = \mod_engelbrain\event\course_module_viewed::create(array(
     'objectid' => $engelbrain->id,
-    'context' => $PAGE->context,
+    'context' => $context,
 ));
 $event->add_record_snapshot('course', $course);
 $event->add_record_snapshot('engelbrain', $engelbrain);
@@ -79,16 +81,16 @@ $submission = $DB->get_record('engelbrain_submissions', array(
 ));
 
 // Display the submission form if the due date hasn't passed or there's no due date.
-if (!$isoverdue || has_capability('mod/engelbrain:grade', $PAGE->context)) {
+if (!$isoverdue || has_capability('mod/engelbrain:grade', $context)) {
     // Check if the user has submit capability.
-    if (has_capability('mod/engelbrain:submit', $PAGE->context)) {
+    if (has_capability('mod/engelbrain:submit', $context)) {
         // Display the submission form.
         echo $OUTPUT->box_start('generalbox', 'submission-form');
         echo html_writer::tag('h3', get_string('submitwork', 'mod_engelbrain'));
         
         // Create the submission form.
         $submissionform = new \mod_engelbrain\form\submission_form(new moodle_url('/mod/engelbrain/submit.php'), array(
-            'id' => $cm->id,
+            'cm' => $cm,
             'engelbrain' => $engelbrain,
             'submission' => $submission
         ));
@@ -127,7 +129,7 @@ if ($submission) {
 }
 
 // Display the grading interface for teachers.
-if (has_capability('mod/engelbrain:grade', $PAGE->context)) {
+if (has_capability('mod/engelbrain:grade', $context)) {
     echo $OUTPUT->box_start('generalbox', 'grading-interface');
     echo html_writer::tag('h3', get_string('gradinginterface', 'mod_engelbrain'));
     

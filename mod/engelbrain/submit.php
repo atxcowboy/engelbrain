@@ -33,22 +33,24 @@ $cm = get_coursemodule_from_id('engelbrain', $id, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 $engelbrain = $DB->get_record('engelbrain', array('id' => $cm->instance), '*', MUST_EXIST);
 
+// Check if the user has access to the activity.
+require_login($course, true, $cm);
+
 // Set up the page.
 $PAGE->set_url('/mod/engelbrain/submit.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($engelbrain->name));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->set_context(context_module::instance($cm->id));
+$context = context_module::instance($cm->id);
+$PAGE->set_context($context);
 
-// Check if the user has access to the activity.
-require_login($course, true, $cm);
-require_capability('mod/engelbrain:submit', $PAGE->context);
+require_capability('mod/engelbrain:submit', $context);
 
 // Check if submissions are closed.
 $now = time();
 $duedate = $engelbrain->duedate;
 $isoverdue = $duedate && $duedate < $now;
 
-if ($isoverdue && !has_capability('mod/engelbrain:grade', $PAGE->context)) {
+if ($isoverdue && !has_capability('mod/engelbrain:grade', $context)) {
     redirect(
         new moodle_url('/mod/engelbrain/view.php', array('id' => $cm->id)),
         get_string('submissionsclosed', 'mod_engelbrain', userdate($duedate)),
@@ -63,9 +65,9 @@ $submission = $DB->get_record('engelbrain_submissions', array(
     'userid' => $USER->id
 ));
 
-// Create the submission form.
+// Create a new submission form.
 $submissionform = new \mod_engelbrain\form\submission_form(null, array(
-    'id' => $cm->id,
+    'cm' => $cm,
     'engelbrain' => $engelbrain,
     'submission' => $submission
 ));

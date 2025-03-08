@@ -164,7 +164,7 @@ if (has_capability('mod/engelbrain:grade', $context)) {
             
             // Create the actions.
             $actions = html_writer::link(
-                new moodle_url('/mod/engelbrain/grade.php', array('id' => $cm->id, 'sid' => $submission->id)),
+                $CFG->wwwroot . '/mod/engelbrain/grade.php?id=' . $cm->id . '&sid=' . $submission->id,
                 'Bewerten'  // Hardcoded text
             );
             

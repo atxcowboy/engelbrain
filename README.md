@@ -1,8 +1,8 @@
 _This README is available in both English and German._
 
 ## Contents
-- [English](# Engelbrain – Intelligent Text Assessment in Moodle)
-- [Deutsch](# Engelbrain - Intelligente Textbewertung in Moodle)
+- [English](#Engelbrain – Intelligent Text Assessment in Moodle)
+- [Deutsch](#Engelbrain - Intelligente Textbewertung in Moodle)
 
 # Engelbrain – Intelligent Text Assessment in Moodle
 

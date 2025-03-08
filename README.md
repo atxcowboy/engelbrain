@@ -9,7 +9,7 @@ _This README is available in both English and German._
 # English
 # EngelbrAIn – Intelligent Text Assessment in Moodle
 
-EngelbrAIn is a Moodle plugin that seamlessly integrates klausurenweb.de — an automated, AI-assisted feedback and assessment tool for both handwritten and typed student texts — via its [API](https://klausurenweb.de/api-docs) into your Moodle environment. The name combines "Engel" (German for “angel”) and "brAIn" (English for intellect, AI capitalized, where the red letter stands for conbstructive criticism and the green letter stands for appreciative feedback), symbolizing a supportive yet artificial intelligent presence in education and assessment. By using the klausurenweb.de API, Engelbrain simplifies exam feedback, reduces the workload for grading, and provides timely insights for improving student learning and performance.
+EngelbrAIn is a Moodle plugin that seamlessly integrates klausurenweb.de — an automated, AI-assisted feedback and assessment tool for both handwritten and typed student texts — via its [API](https://klausurenweb.de/api-docs) into your Moodle environment. The name combines "Engel" (German for “angel”) and "brAIn" (English for intellect, AI capitalized, where the red letter stands for constructive criticism and the green letter stands for appreciative feedback), symbolizing a supportive yet artificial intelligent presence in education and assessment. By using the klausurenweb.de API, Engelbrain simplifies exam feedback, reduces the workload for grading, and provides timely insights for improving student learning and performance.
 
 This plugin enables the integration of klausurenweb.de into Moodle. Moodle users can:
 

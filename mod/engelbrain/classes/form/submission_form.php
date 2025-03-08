@@ -63,6 +63,10 @@ class submission_form extends moodleform {
             return;
         }
         
+        // Füge das ID-Feld hinzu
+        $mform->addElement('hidden', 'id', $cm->id);
+        $mform->setType('id', PARAM_INT);
+        
         $context = context_module::instance($cm->id);
         
         // Add the submission content field.

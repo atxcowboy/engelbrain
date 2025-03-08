@@ -67,6 +67,10 @@ $string['privacy:metadata:engelbrain'] = 'In order to integrate with klausurenwe
 $string['privacy:metadata:engelbrain:userid'] = 'The userid is sent from Moodle to allow you to access your data on klausurenweb.de.';
 $string['privacy:metadata:engelbrain:submissioncontent'] = 'The content of your submissions is sent to klausurenweb.de for processing.';
 
+// Error messages
+$string['missingparameter'] = 'Missing required parameter';
+$string['invalidcoursemodule'] = 'Invalid course module';
+
 // German translations
 $string['de:pluginname'] = 'klausurenweb.de Integration';
 $string['de:modulename'] = 'klausurenweb.de Aufgabe';

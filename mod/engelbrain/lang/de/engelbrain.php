@@ -65,4 +65,8 @@ $string['nosubmissions'] = 'Noch keine Einreichungen';
 // Datenschutz
 $string['privacy:metadata:engelbrain'] = 'Um mit klausurenweb.de zu integrieren, müssen Benutzerdaten mit diesem Dienst ausgetauscht werden.';
 $string['privacy:metadata:engelbrain:userid'] = 'Die Benutzer-ID wird von Moodle gesendet, damit Sie auf Ihre Daten auf klausurenweb.de zugreifen können.';
-$string['privacy:metadata:engelbrain:submissioncontent'] = 'Der Inhalt Ihrer Einreichungen wird zur Verarbeitung an klausurenweb.de gesendet.'; 
+$string['privacy:metadata:engelbrain:submissioncontent'] = 'Der Inhalt Ihrer Einreichungen wird zur Verarbeitung an klausurenweb.de gesendet.';
+
+// Fehlermeldungen
+$string['missingparameter'] = 'Fehlender erforderlicher Parameter';
+$string['invalidcoursemodule'] = 'Ungültiges Kursmodul'; 

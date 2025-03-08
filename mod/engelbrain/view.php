@@ -105,23 +105,31 @@ if (!$isoverdue || has_capability('mod/engelbrain:grade', $context)) {
 // Display the current submission status if it exists.
 if ($submission) {
     echo $OUTPUT->box_start('generalbox', 'submission-status');
-    echo html_writer::tag('h3', get_string('submissionstatus', 'mod_engelbrain'));
     
-    // Display the submission status.
-    echo html_writer::tag('p', get_string('status_' . $submission->status, 'mod_engelbrain'));
+    // Use hardcoded text instead of get_string
+    echo html_writer::tag('h3', 'Einreichungsstatus');
     
-    // Display the submission date.
-    echo html_writer::tag('p', get_string('submissiondate', 'mod_engelbrain', userdate($submission->timecreated)));
+    // Show the status.
+    $submissiondate = userdate($submission->timecreated);
+    
+    // Use a table for better formatting.
+    $table = new html_table();
+    // Use hardcoded text for column names
+    $table->head = array('Status', 'Einreichungsdatum');
+    // Use hardcoded text for status
+    $table->data[] = array('Eingereicht', $submissiondate);
+    
+    echo html_writer::table($table);
     
     // Display the submission content.
     if (!empty($submission->submission_content)) {
-        echo html_writer::tag('p', get_string('submissioncontent', 'mod_engelbrain'));
+        echo html_writer::tag('p', 'Einreichungsinhalt');
         echo html_writer::tag('div', format_text($submission->submission_content, FORMAT_HTML), array('class' => 'submission-content'));
     }
     
     // Display the feedback if it exists and the submission has been graded.
     if ($submission->status == 'graded' && !empty($submission->feedback)) {
-        echo html_writer::tag('h4', get_string('feedback_from_engelbrain', 'mod_engelbrain'));
+        echo html_writer::tag('h4', 'Feedback von klausurenweb.de');
         echo html_writer::tag('div', format_text($submission->feedback, FORMAT_HTML), array('class' => 'feedback'));
     }
     
@@ -141,11 +149,12 @@ if (has_capability('mod/engelbrain:grade', $context)) {
     } else {
         // Create a table to display the submissions.
         $table = new html_table();
+        // Use standard core strings or hardcoded texts
         $table->head = array(
-            get_string('student', 'mod_engelbrain'),
-            get_string('submissiondate', 'mod_engelbrain'),
-            get_string('status', 'mod_engelbrain'),
-            get_string('actions', 'mod_engelbrain')
+            get_string('fullname'),  // Core Moodle string
+            'Einreichungsdatum',
+            'Status',
+            'Aktionen'
         );
         $table->data = array();
         
@@ -156,14 +165,14 @@ if (has_capability('mod/engelbrain:grade', $context)) {
             // Create the actions.
             $actions = html_writer::link(
                 new moodle_url('/mod/engelbrain/grade.php', array('id' => $cm->id, 'sid' => $submission->id)),
-                get_string('grade', 'mod_engelbrain')
+                'Bewerten'  // Hardcoded text
             );
             
             // Add the submission to the table.
             $table->data[] = array(
                 fullname($user),
                 userdate($submission->timecreated),
-                get_string('status_' . $submission->status, 'mod_engelbrain'),
+                'Eingereicht',  // Hardcoded text
                 $actions
             );
         }

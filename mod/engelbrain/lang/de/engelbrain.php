@@ -46,6 +46,9 @@ $string['lerncode'] = 'Lerncode';
 $string['lerncode_desc'] = 'Geben Sie den klausurenweb.de-Lerncode für diese Aufgabe ein';
 $string['lerncode_help'] = 'Der Lerncode ist eine eindeutige Kennung für die Aufgabe in klausurenweb.de. Schüler verwenden diesen Code, um auf die zugewiesene Aufgabe zuzugreifen.';
 
+// Index-Seite
+$string['nonewmodules'] = 'Keine klausurenweb.de-Aufgaben gefunden';
+
 // Einreichungsbezogen
 $string['submit_to_engelbrain'] = 'An klausurenweb.de übermitteln';
 $string['submission_successful'] = 'Erfolgreich an klausurenweb.de übermittelt';

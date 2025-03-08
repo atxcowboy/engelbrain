@@ -46,6 +46,9 @@ $string['lerncode'] = 'Lerncode';
 $string['lerncode_desc'] = 'Enter the klausurenweb.de Lerncode for this assignment';
 $string['lerncode_help'] = 'The Lerncode is a unique identifier for the assignment in klausurenweb.de. Students use this code to access the assigned task.';
 
+// Index page
+$string['nonewmodules'] = 'No klausurenweb.de assignments found';
+
 // Submission related
 $string['submit_to_engelbrain'] = 'Submit to klausurenweb.de';
 $string['submission_successful'] = 'Successfully submitted to klausurenweb.de';

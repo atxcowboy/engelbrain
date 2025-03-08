@@ -118,7 +118,16 @@ class client {
         $curl = new \curl();
         $curl->setHeader('X-API-Key: ' . $this->apikey);
         $curl->setHeader('Accept: application/json');
+        
+        // Set a reasonable timeout
+        $curl->setopt([
+            'CURLOPT_CONNECTTIMEOUT' => 10,   // 10 seconds connection timeout
+            'CURLOPT_TIMEOUT' => 30,          // 30 seconds total timeout
+            'CURLOPT_SSL_VERIFYPEER' => true, // Verify SSL
+            'CURLOPT_FAILONERROR' => false    // Don't fail on error HTTP status
+        ]);
 
+        $response = null;
         if ($method === 'GET') {
             $response = $curl->get($url);
         } else if ($method === 'POST') {
@@ -128,7 +137,18 @@ class client {
             throw new \moodle_exception('unsupported_http_method', 'mod_engelbrain');
         }
 
-        // Check for errors.
+        // Check for connection errors
+        if ($curl->errno != 0) {
+            $errormsg = "cURL error ({$curl->errno}): {$curl->error}";
+            if ($curl->errno == CURLE_OPERATION_TIMEOUTED) {
+                $errormsg = "Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Bitte versuchen Sie es später erneut.";
+            } else if ($curl->errno == CURLE_COULDNT_CONNECT || $curl->errno == CURLE_COULDNT_RESOLVE_HOST) {
+                $errormsg = "Verbindung zur klausurenweb.de API nicht möglich. Bitte überprüfen Sie Ihre Internetverbindung und die API-Einstellungen.";
+            }
+            throw new \moodle_exception('api_error', 'mod_engelbrain', '', $errormsg);
+        }
+        
+        // Check for HTTP errors.
         $info = $curl->get_info();
         if ($info['http_code'] >= 400) {
             $error = json_decode($response, true);

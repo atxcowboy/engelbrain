@@ -70,11 +70,27 @@ if ($fetch_api_feedback) {
         }
         
         if (empty($api_key)) {
-            throw new \moodle_exception('No API key available. Please configure a teacher API key or school API key.');
+            throw new \moodle_exception('API-Schlüssel fehlt. Bitte konfigurieren Sie einen Lehrer-API-Schlüssel oder Schul-API-Schlüssel.');
         }
         
         // Create API client
         $api_client = new \mod_engelbrain\api\client($api_key);
+        
+        // Test the API connection first
+        try {
+            // Simple request to verify the API connection - validate the lerncode
+            $validation_response = $api_client->validate_lerncode($engelbrain->lerncode);
+            if (empty($validation_response) || !isset($validation_response['valid'])) {
+                throw new \moodle_exception('API-Verbindungstest fehlgeschlagen. Die API-Antwort ist ungültig.');
+            }
+            
+            if (!$validation_response['valid']) {
+                throw new \moodle_exception('Der Lerncode "' . $engelbrain->lerncode . '" ist ungültig: ' . 
+                    (isset($validation_response['message']) ? $validation_response['message'] : 'Unbekannter Fehler'));
+            }
+        } catch (\Exception $e) {
+            throw new \moodle_exception('Fehler beim Testen der API-Verbindung: ' . $e->getMessage());
+        }
         
         // Check if there's a submission ID stored from the API
         if (!empty($submission->kw_submission_id)) {

@@ -113,58 +113,143 @@ class client {
      * @return array The API response.
      */
     private function request($method, $path, $data = null) {
-        $url = $this->endpoint . $path;
-
-        $curl = new \curl();
-        $curl->setHeader('X-API-Key: ' . $this->apikey);
-        $curl->setHeader('Accept: application/json');
+        // Prepare the full URL
+        $url = rtrim($this->endpoint, '/') . '/' . ltrim($path, '/');
         
-        // Set timeout values - LLM responses can take several minutes
-        $curl->setopt([
-            'CURLOPT_CONNECTTIMEOUT' => 20,     // 20 seconds connection timeout
-            'CURLOPT_TIMEOUT' => 300,           // 5 minutes total timeout for LLM processing
-            'CURLOPT_SSL_VERIFYPEER' => true,   // Verify SSL
-            'CURLOPT_FAILONERROR' => false      // Don't fail on error HTTP status
-        ]);
-
-        $response = null;
-        if ($method === 'GET') {
-            $response = $curl->get($url);
-        } else if ($method === 'POST') {
-            $curl->setHeader('Content-Type: application/json');
-            $response = $curl->post($url, json_encode($data));
-        } else {
-            throw new \moodle_exception('unsupported_http_method', 'mod_engelbrain');
-        }
-
-        // Check for connection errors
-        if ($curl->errno != 0) {
-            $errormsg = "cURL error ({$curl->errno}): {$curl->error}";
-            if ($curl->errno == CURLE_OPERATION_TIMEOUTED) {
-                $errormsg = "Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Die LLM-Verarbeitung kann bis zu 5 Minuten dauern. Bitte versuchen Sie es erneut oder prüfen Sie später das Ergebnis.";
-            } else if ($curl->errno == CURLE_COULDNT_CONNECT || $curl->errno == CURLE_COULDNT_RESOLVE_HOST) {
-                $errormsg = "Verbindung zur klausurenweb.de API nicht möglich. Bitte überprüfen Sie Ihre Internetverbindung und die API-Einstellungen.";
-            }
-            throw new \moodle_exception('api_error', 'mod_engelbrain', '', $errormsg);
+        // Log request details for debugging
+        debugging('API-Anfrage: ' . $method . ' ' . $url, DEBUG_DEVELOPER);
+        if ($data) {
+            debugging('API-Anfragedaten: ' . json_encode($data), DEBUG_DEVELOPER);
         }
         
-        // Check for HTTP errors.
-        $info = $curl->get_info();
-        if ($info['http_code'] >= 400) {
-            $error = json_decode($response, true);
-            if (isset($error['detail'])) {
-                throw new \moodle_exception('api_error', 'mod_engelbrain', '', $error['detail']);
-            } else {
-                throw new \moodle_exception('api_error_unknown', 'mod_engelbrain', '', $info['http_code']);
+        // Initialize cURL
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        
+        // Set timeout values
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+        
+        // Set API key header
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'X-API-KEY: ' . $this->apikey,
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ));
+        
+        // Set method and data if needed
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            if ($data) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            }
+        } else if ($method !== 'GET') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            if ($data) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             }
         }
-
-        // Parse the response.
-        $result = json_decode($response, true);
-        if ($result === null) {
-            throw new \moodle_exception('api_error_invalid_json', 'mod_engelbrain');
+        
+        // Execute the request
+        $response = curl_exec($ch);
+        
+        // Get response info
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        $curl_errno = curl_errno($ch);
+        $total_time = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+        
+        // Log response details
+        debugging('API-Antwort-Status: ' . $status . ', Zeit: ' . $total_time . 's', DEBUG_DEVELOPER);
+        if ($response) {
+            debugging('API-Antwort-Körper: ' . substr($response, 0, 500) . (strlen($response) > 500 ? '...' : ''), DEBUG_DEVELOPER);
         }
-
-        return $result;
+        
+        // Handle connection errors
+        if ($response === false) {
+            debugging('cURL-Fehler: ' . $curl_error . ' (Code: ' . $curl_errno . ')', DEBUG_DEVELOPER);
+            
+            // Handle specific curl errors with user-friendly messages
+            switch ($curl_errno) {
+                case CURLE_OPERATION_TIMEOUTED:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Die LLM-Verarbeitung kann bis zu 5 Minuten dauern. ' .
+                        'Bitte versuchen Sie es erneut oder prüfen Sie später das Ergebnis. Technische Details: ' . $curl_error);
+                    
+                case CURLE_COULDNT_CONNECT:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Verbindung zu klausurenweb.de konnte nicht hergestellt werden. Bitte prüfen Sie Ihre Internetverbindung ' .
+                        'oder versuchen Sie es später erneut. Technische Details: ' . $curl_error);
+                    
+                case CURLE_COULDNT_RESOLVE_HOST:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Der Server "klausurenweb.de" konnte nicht gefunden werden. Bitte prüfen Sie Ihre DNS-Einstellungen ' .
+                        'oder versuchen Sie es später erneut. Technische Details: ' . $curl_error);
+                    
+                default:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Ein Fehler ist bei der Verbindung zu klausurenweb.de aufgetreten. Fehlercode: ' . $curl_errno . 
+                        '. Technische Details: ' . $curl_error);
+            }
+        }
+        
+        // Handle HTTP errors
+        if ($status >= 400) {
+            debugging('HTTP-Fehler: ' . $status, DEBUG_DEVELOPER);
+            
+            // Try to parse the error response
+            $error_data = json_decode($response, true);
+            $error_message = isset($error_data['message']) ? $error_data['message'] : 'Unbekannter Fehler';
+            
+            // Build detailed error message based on HTTP status
+            switch ($status) {
+                case 401:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Authentifizierungsfehler: Der API-Schlüssel ist ungültig oder fehlt. ' .
+                        'Bitte überprüfen Sie den API-Schlüssel in den Einstellungen. Server-Antwort: ' . $error_message);
+                    
+                case 403:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Zugriff verweigert: Sie haben keine Berechtigung für diese Operation. ' .
+                        'Bitte kontaktieren Sie den Support. Server-Antwort: ' . $error_message);
+                    
+                case 404:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Die angeforderte Ressource wurde nicht gefunden. ' .
+                        'Bitte überprüfen Sie den Lerncode oder die Einreichungs-ID. Server-Antwort: ' . $error_message);
+                    
+                case 429:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Zu viele Anfragen an die API. Bitte warten Sie einen Moment und versuchen Sie es erneut. ' .
+                        'Server-Antwort: ' . $error_message);
+                    
+                case 500:
+                case 502:
+                case 503:
+                case 504:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Ein Serverfehler ist bei klausurenweb.de aufgetreten. Bitte versuchen Sie es später erneut. ' .
+                        'HTTP-Status: ' . $status . '. Server-Antwort: ' . $error_message);
+                    
+                default:
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                        'Ein unerwarteter Fehler ist aufgetreten. HTTP-Status: ' . $status . '. Server-Antwort: ' . $error_message);
+            }
+        }
+        
+        curl_close($ch);
+        
+        // Try to parse the response
+        $response_data = json_decode($response, true);
+        if ($response && $response_data === null) {
+            debugging('Ungültiges JSON in der API-Antwort: ' . substr($response, 0, 500), DEBUG_DEVELOPER);
+            throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                'Die Antwort von klausurenweb.de enthielt ungültiges JSON. Technische Details: ' . 
+                substr($response, 0, 200) . (strlen($response) > 200 ? '...' : ''));
+        }
+        
+        return $response_data;
     }
 } 

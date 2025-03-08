@@ -70,83 +70,147 @@ if ($fetch_api_feedback) {
         }
         
         if (empty($api_key)) {
-            throw new \moodle_exception('API-Schlüssel fehlt. Bitte konfigurieren Sie einen Lehrer-API-Schlüssel oder Schul-API-Schlüssel.');
+            $api_feedback_message = 'API-Schlüssel fehlt. Bitte konfigurieren Sie einen Lehrer-API-Schlüssel oder Schul-API-Schlüssel.';
+            echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+            // Log the error
+            debugging('API-Schlüssel fehlt. Kein Lehrer- oder Schul-API-Schlüssel konfiguriert.', DEBUG_DEVELOPER);
+            goto show_page; // Skip API operations but show the page
         }
         
-        // Create API client
+        // Create API client with verbose error handling
+        debugging('Erstelle API-Client mit Schlüssel: ' . substr($api_key, 0, 5) . '...', DEBUG_DEVELOPER);
         $api_client = new \mod_engelbrain\api\client($api_key);
         
         // Test the API connection first
         try {
             // Simple request to verify the API connection - validate the lerncode
+            debugging('Validiere Lerncode: ' . $engelbrain->lerncode, DEBUG_DEVELOPER);
+            
+            if (empty($engelbrain->lerncode)) {
+                $api_feedback_message = 'Lerncode fehlt. Bitte konfigurieren Sie einen Lerncode für diese Aktivität.';
+                echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+                debugging('Lerncode fehlt. Aktivitäts-ID: ' . $engelbrain->id, DEBUG_DEVELOPER);
+                goto show_page; // Skip API operations but show the page
+            }
+            
             $validation_response = $api_client->validate_lerncode($engelbrain->lerncode);
+            debugging('API-Antwort für Lerncode-Validierung: ' . json_encode($validation_response), DEBUG_DEVELOPER);
+            
             if (empty($validation_response) || !isset($validation_response['valid'])) {
-                throw new \moodle_exception('API-Verbindungstest fehlgeschlagen. Die API-Antwort ist ungültig.');
+                $api_feedback_message = 'API-Verbindungstest fehlgeschlagen. Die API-Antwort ist ungültig: ' . 
+                    json_encode($validation_response);
+                echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+                debugging('Ungültige API-Antwort: ' . json_encode($validation_response), DEBUG_DEVELOPER);
+                goto show_page; // Skip API operations but show the page
             }
             
             if (!$validation_response['valid']) {
-                throw new \moodle_exception('Der Lerncode "' . $engelbrain->lerncode . '" ist ungültig: ' . 
-                    (isset($validation_response['message']) ? $validation_response['message'] : 'Unbekannter Fehler'));
+                $message = isset($validation_response['message']) ? $validation_response['message'] : 'Unbekannter Fehler';
+                $api_feedback_message = 'Der Lerncode "' . $engelbrain->lerncode . '" ist ungültig: ' . $message;
+                echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+                debugging('Ungültiger Lerncode: ' . $engelbrain->lerncode . ', Nachricht: ' . $message, DEBUG_DEVELOPER);
+                goto show_page; // Skip API operations but show the page
             }
         } catch (\Exception $e) {
-            throw new \moodle_exception('Fehler beim Testen der API-Verbindung: ' . $e->getMessage());
+            $api_feedback_message = 'Fehler beim Testen der API-Verbindung: ' . $e->getMessage();
+            echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+            debugging('API-Verbindungsfehler: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
+            goto show_page; // Skip API operations but show the page
         }
         
         // Check if there's a submission ID stored from the API
         if (!empty($submission->kw_submission_id)) {
             // Get the feedback from the API for this submission
-            $feedback_data = $api_client->get_feedback($submission->kw_submission_id);
-            
-            // Update the submission with the feedback and grade from the API
-            if (!empty($feedback_data) && isset($feedback_data['feedback'])) {
-                $submission->feedback = $feedback_data['feedback'];
-                if (isset($feedback_data['score'])) {
-                    // Convert score to grade (assuming API returns score between 0-100)
-                    $submission->grade = $feedback_data['score'];
-                }
-                $submission->status = 'graded';
-                $submission->timemodified = time();
+            try {
+                debugging('Hole Feedback für Einreichung: ' . $submission->kw_submission_id, DEBUG_DEVELOPER);
+                $feedback_data = $api_client->get_feedback($submission->kw_submission_id);
+                debugging('API-Antwort für Feedback: ' . json_encode($feedback_data), DEBUG_DEVELOPER);
                 
-                // Save to database
-                $DB->update_record('engelbrain_submissions', $submission);
-                
-                $api_operation_performed = true;
-                $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
-            } else {
-                $api_feedback_message = 'Kein Feedback von klausurenweb.de verfügbar oder die Bewertung ist noch in Bearbeitung.';
-            }
-        } else {
-            // If no kw_submission_id exists, try to submit the content to the API first
-            $student_name = fullname($student);
-            $submission_content = $submission->submission_content;
-            
-            if (!empty($submission_content) && !empty($engelbrain->lerncode)) {
-                $metadata = array(
-                    'moodle_submission_id' => $submission->id,
-                    'course_id' => $course->id,
-                    'course_name' => $course->fullname,
-                    'activity_name' => $engelbrain->name
-                );
-                
-                $response = $api_client->submit_work($engelbrain->lerncode, $submission_content, $student_name, $metadata);
-                
-                if (!empty($response) && isset($response['id'])) {
-                    // Store the klausurenweb.de submission ID
-                    $submission->kw_submission_id = $response['id'];
+                // Update the submission with the feedback and grade from the API
+                if (!empty($feedback_data) && isset($feedback_data['feedback'])) {
+                    $submission->feedback = $feedback_data['feedback'];
+                    if (isset($feedback_data['score'])) {
+                        // Convert score to grade (assuming API returns score between 0-100)
+                        $submission->grade = $feedback_data['score'];
+                    }
+                    $submission->status = 'graded';
+                    $submission->timemodified = time();
+                    
+                    // Save to database
                     $DB->update_record('engelbrain_submissions', $submission);
                     
                     $api_operation_performed = true;
-                    $api_feedback_message = 'Die Einreichung wurde an klausurenweb.de übermittelt. Bitte aktualisieren Sie später, um das Feedback abzurufen.';
+                    $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
                 } else {
-                    $api_feedback_message = 'Fehler beim Übermitteln der Einreichung an klausurenweb.de.';
+                    $api_feedback_message = 'Kein Feedback von klausurenweb.de verfügbar oder die Bewertung ist noch in Bearbeitung. API-Antwort: ' . json_encode($feedback_data);
+                    debugging('Leere Feedback-Antwort: ' . json_encode($feedback_data), DEBUG_DEVELOPER);
                 }
-            } else {
-                $api_feedback_message = 'Die Einreichung enthält keinen Inhalt oder es ist kein Lerncode konfiguriert.';
+            } catch (\Exception $e) {
+                $api_feedback_message = 'Fehler beim Abrufen des Feedbacks: ' . $e->getMessage();
+                echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+                debugging('Feedback-Abruf-Fehler: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
+            }
+        } else {
+            // If no kw_submission_id exists, try to submit the content to the API first
+            try {
+                $student_name = fullname($student);
+                $submission_content = $submission->submission_content;
+                
+                debugging('Übermittle Arbeit an API - Schüler: ' . $student_name . ', Inhaltslänge: ' . 
+                    (is_string($submission_content) ? strlen($submission_content) : 'nicht vorhanden'), DEBUG_DEVELOPER);
+                
+                if (!empty($submission_content) && !empty($engelbrain->lerncode)) {
+                    $metadata = array(
+                        'moodle_submission_id' => $submission->id,
+                        'course_id' => $course->id,
+                        'course_name' => $course->fullname,
+                        'activity_name' => $engelbrain->name
+                    );
+                    
+                    debugging('API-Anfrage-Metadaten: ' . json_encode($metadata), DEBUG_DEVELOPER);
+                    
+                    $response = $api_client->submit_work($engelbrain->lerncode, $submission_content, $student_name, $metadata);
+                    debugging('API-Antwort für Einreichung: ' . json_encode($response), DEBUG_DEVELOPER);
+                    
+                    if (!empty($response) && isset($response['id'])) {
+                        // Store the klausurenweb.de submission ID
+                        $submission->kw_submission_id = $response['id'];
+                        $DB->update_record('engelbrain_submissions', $submission);
+                        
+                        $api_operation_performed = true;
+                        $api_feedback_message = 'Die Einreichung wurde an klausurenweb.de übermittelt. Bitte aktualisieren Sie später, um das Feedback abzurufen. Einreichungs-ID: ' . $response['id'];
+                    } else {
+                        $api_feedback_message = 'Fehler beim Übermitteln der Einreichung an klausurenweb.de. API-Antwort: ' . json_encode($response);
+                        debugging('Ungültige Submit-Antwort: ' . json_encode($response), DEBUG_DEVELOPER);
+                    }
+                } else {
+                    $api_feedback_message = 'Die Einreichung enthält keinen Inhalt oder es ist kein Lerncode konfiguriert. Lerncode: "' . 
+                        $engelbrain->lerncode . '", Inhaltsvorhanden: ' . (!empty($submission_content) ? 'Ja' : 'Nein');
+                    debugging($api_feedback_message, DEBUG_DEVELOPER);
+                }
+            } catch (\Exception $e) {
+                $api_feedback_message = 'Fehler beim Übermitteln der Arbeit: ' . $e->getMessage();
+                echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+                debugging('Übermittlungsfehler: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
             }
         }
     } catch (\Exception $e) {
         $api_feedback_message = 'API-Fehler: ' . $e->getMessage();
+        echo $OUTPUT->notification($api_feedback_message, \core\output\notification::NOTIFY_ERROR);
+        debugging('Allgemeiner API-Fehler: ' . $e->getMessage() . "\n" . $e->getTraceAsString(), DEBUG_DEVELOPER);
     }
+}
+
+// Show page label for goto statements
+show_page:
+
+// Display API feedback message if any
+if (!empty($api_feedback_message) && strpos($OUTPUT->getContent(), $api_feedback_message) === false) {
+    $notification_type = $api_operation_performed ? 
+        \core\output\notification::NOTIFY_SUCCESS : 
+        \core\output\notification::NOTIFY_WARNING;
+    
+    echo $OUTPUT->notification($api_feedback_message, $notification_type);
 }
 
 // Define the grading form.
@@ -219,15 +283,6 @@ if ($data = $grading_form->get_data()) {
 // Output starts here.
 echo $OUTPUT->header();
 echo $OUTPUT->heading('Einreichung bewerten');
-
-// Display API feedback message if any
-if (!empty($api_feedback_message)) {
-    $notification_type = $api_operation_performed ? 
-        \core\output\notification::NOTIFY_SUCCESS : 
-        \core\output\notification::NOTIFY_WARNING;
-    
-    echo $OUTPUT->notification($api_feedback_message, $notification_type);
-}
 
 // Display student information.
 echo html_writer::tag('p', 'Student: ' . fullname($student));

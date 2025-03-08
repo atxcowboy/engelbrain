@@ -86,12 +86,14 @@ class client {
      */
     public function submit_work($lerncode, $content, $studentname, $metadata = array()) {
         $data = array(
+            'lerncode' => $lerncode,
             'content' => $content,
             'student_name' => $studentname,
+            'content_format' => 'html',
             'metadata' => $metadata
         );
 
-        return $this->request('POST', "/submissions/{$lerncode}", $data);
+        return $this->request('POST', "/submissions", $data);
     }
 
     /**
@@ -101,7 +103,7 @@ class client {
      * @return array The API response.
      */
     public function get_feedback($submissionid) {
-        return $this->request('GET', "/submissions/{$submissionid}/feedback");
+        return $this->request('GET', "/submissions/{$submissionid}");
     }
 
     /**
@@ -132,12 +134,17 @@ class client {
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
         curl_setopt($ch, CURLOPT_TIMEOUT, 300);
         
-        // Set API key header
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        // Set API key header (genaue Schreibweise aus der API-Middleware)
+        $headers = array(
             'X-API-KEY: ' . $this->apikey,
             'Content-Type: application/json',
             'Accept: application/json'
-        ));
+        );
+
+        debugging('API-Header: X-API-KEY: ' . substr($this->apikey, 0, 5) . '... (gekürzt aus Sicherheitsgründen)', DEBUG_DEVELOPER);
+        debugging('API-Header: Content-Type: application/json, Accept: application/json', DEBUG_DEVELOPER);
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         
         // Set method and data if needed
         if ($method === 'POST') {

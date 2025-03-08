@@ -141,8 +141,24 @@ if ($fetch_api_feedback) {
                     
                     $api_operation_performed = true;
                     $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
+                } else if (!empty($feedback_data) && $feedback_data['status'] === 'completed') {
+                    // Feedback ist verfügbar, aber anders strukturiert
+                    $submission->feedback = isset($feedback_data['feedback_text']) ? $feedback_data['feedback_text'] : json_encode($feedback_data);
+                    if (isset($feedback_data['score'])) {
+                        // Convert score to grade (assuming API returns score between 0-100)
+                        $submission->grade = $feedback_data['score'];
+                    }
+                    $submission->status = 'graded';
+                    $submission->timemodified = time();
+                    
+                    // Save to database
+                    $DB->update_record('engelbrain_submissions', $submission);
+                    
+                    $api_operation_performed = true;
+                    $api_feedback_message = 'Automatisches Feedback wurde erfolgreich von klausurenweb.de abgerufen.';
                 } else {
-                    $api_feedback_message = 'Kein Feedback von klausurenweb.de verfügbar oder die Bewertung ist noch in Bearbeitung. API-Antwort: ' . json_encode($feedback_data);
+                    $api_feedback_message = 'Kein Feedback von klausurenweb.de verfügbar oder die Bewertung ist noch in Bearbeitung. Status: ' . 
+                        (isset($feedback_data['status']) ? $feedback_data['status'] : 'unbekannt') . '. API-Antwort: ' . json_encode($feedback_data);
                     debugging('Leere Feedback-Antwort: ' . json_encode($feedback_data), DEBUG_DEVELOPER);
                 }
             } catch (\Exception $e) {
@@ -159,6 +175,31 @@ if ($fetch_api_feedback) {
                 debugging('Übermittle Arbeit an API - Schüler: ' . $student_name . ', Inhaltslänge: ' . 
                     (is_string($submission_content) ? strlen($submission_content) : 'nicht vorhanden'), DEBUG_DEVELOPER);
                 
+                // Prüfe und korrigiere HTML
+                if (is_string($submission_content)) {
+                    // Entferne leere Zeilen am Anfang und Ende
+                    $submission_content = trim($submission_content);
+                    
+                    // Prüfe, ob der Inhalt mit <p> beginnt, falls nicht und HTML vorhanden ist
+                    if (!empty($submission_content) && stripos($submission_content, '<p>') === false && 
+                        (stripos($submission_content, '</p>') !== false || stripos($submission_content, '<br') !== false)) {
+                        $submission_content = '<p>' . $submission_content;
+                    }
+                    
+                    // Prüfe, ob der Inhalt mit </p> endet, falls nicht und HTML vorhanden ist
+                    if (!empty($submission_content) && stripos($submission_content, '</p>') === false && 
+                        (stripos($submission_content, '<p>') !== false || stripos($submission_content, '<br') !== false)) {
+                        $submission_content = $submission_content . '</p>';
+                    }
+                    
+                    // Wenn der Inhalt keine HTML-Tags enthält, in <p>-Tags einschließen
+                    if (!empty($submission_content) && stripos($submission_content, '<') === false) {
+                        $submission_content = '<p>' . $submission_content . '</p>';
+                    }
+                    
+                    debugging('Korrigierter Inhalt für API: ' . $submission_content, DEBUG_DEVELOPER);
+                }
+                
                 if (!empty($submission_content) && !empty($engelbrain->lerncode)) {
                     $metadata = array(
                         'moodle_submission_id' => $submission->id,
@@ -172,13 +213,13 @@ if ($fetch_api_feedback) {
                     $response = $api_client->submit_work($engelbrain->lerncode, $submission_content, $student_name, $metadata);
                     debugging('API-Antwort für Einreichung: ' . json_encode($response), DEBUG_DEVELOPER);
                     
-                    if (!empty($response) && isset($response['id'])) {
+                    if (!empty($response) && isset($response['submission_id'])) {
                         // Store the klausurenweb.de submission ID
-                        $submission->kw_submission_id = $response['id'];
+                        $submission->kw_submission_id = $response['submission_id'];
                         $DB->update_record('engelbrain_submissions', $submission);
                         
                         $api_operation_performed = true;
-                        $api_feedback_message = 'Die Einreichung wurde an klausurenweb.de übermittelt. Bitte aktualisieren Sie später, um das Feedback abzurufen. Einreichungs-ID: ' . $response['id'];
+                        $api_feedback_message = 'Die Einreichung wurde an klausurenweb.de übermittelt. Bitte aktualisieren Sie später, um das Feedback abzurufen. Einreichungs-ID: ' . $response['submission_id'];
                     } else {
                         $api_feedback_message = 'Fehler beim Übermitteln der Einreichung an klausurenweb.de. API-Antwort: ' . json_encode($response);
                         debugging('Ungültige Submit-Antwort: ' . json_encode($response), DEBUG_DEVELOPER);

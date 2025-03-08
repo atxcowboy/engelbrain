@@ -53,15 +53,6 @@ class course_module_viewed extends \core\event\course_module_viewed {
     }
 
     /**
-     * Return the legacy event log data.
-     *
-     * @return array|null
-     */
-    public static function get_legacy_eventname() {
-        return 'view';
-    }
-
-    /**
      * Custom validation.
      *
      * @throws \coding_exception

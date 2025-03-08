@@ -59,6 +59,8 @@ $string['feedback'] = 'Feedback';
 $string['view_submissions'] = 'View submissions';
 $string['submitwork'] = 'Submit work';
 $string['submissioncontent'] = 'Submission content';
+$string['gradinginterface'] = 'Grading interface';
+$string['nosubmissions'] = 'No submissions yet';
 
 // Privacy
 $string['privacy:metadata:engelbrain'] = 'In order to integrate with klausurenweb.de, user data needs to be exchanged with that service.';

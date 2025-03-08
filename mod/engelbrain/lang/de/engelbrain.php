@@ -59,6 +59,8 @@ $string['feedback'] = 'Feedback';
 $string['view_submissions'] = 'Einreichungen anzeigen';
 $string['submitwork'] = 'Arbeit einreichen';
 $string['submissioncontent'] = 'Einreichungsinhalt';
+$string['gradinginterface'] = 'Bewertungsschnittstelle';
+$string['nosubmissions'] = 'Noch keine Einreichungen';
 
 // Datenschutz
 $string['privacy:metadata:engelbrain'] = 'Um mit klausurenweb.de zu integrieren, müssen Benutzerdaten mit diesem Dienst ausgetauscht werden.';

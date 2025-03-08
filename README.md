@@ -1,3 +1,5 @@
+![Engel Brain Logo](engelbrain.png)
+
 _This README is available in both English and German._
 
 ## Contents

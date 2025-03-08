@@ -174,22 +174,22 @@ class client {
             // Handle specific curl errors with user-friendly messages
             switch ($curl_errno) {
                 case CURLE_OPERATION_TIMEOUTED:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'engelbrain', '', 
                         'Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Die LLM-Verarbeitung kann bis zu 5 Minuten dauern. ' .
                         'Bitte versuchen Sie es erneut oder prüfen Sie später das Ergebnis. Technische Details: ' . $curl_error);
                     
                 case CURLE_COULDNT_CONNECT:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'engelbrain', '', 
                         'Verbindung zu klausurenweb.de konnte nicht hergestellt werden. Bitte prüfen Sie Ihre Internetverbindung ' .
                         'oder versuchen Sie es später erneut. Technische Details: ' . $curl_error);
                     
                 case CURLE_COULDNT_RESOLVE_HOST:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'engelbrain', '', 
                         'Der Server "klausurenweb.de" konnte nicht gefunden werden. Bitte prüfen Sie Ihre DNS-Einstellungen ' .
                         'oder versuchen Sie es später erneut. Technische Details: ' . $curl_error);
                     
                 default:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'engelbrain', '', 
                         'Ein Fehler ist bei der Verbindung zu klausurenweb.de aufgetreten. Fehlercode: ' . $curl_errno . 
                         '. Technische Details: ' . $curl_error);
             }
@@ -201,42 +201,55 @@ class client {
             
             // Try to parse the error response
             $error_data = json_decode($response, true);
-            $error_message = isset($error_data['message']) ? $error_data['message'] : 'Unbekannter Fehler';
+            $error_message = '';
+            
+            // Versuche zuerst "detail" zu finden (typisch für FastAPI/Django), dann "message"
+            if (isset($error_data['detail'])) {
+                $error_message = $error_data['detail'];
+            } else if (isset($error_data['message'])) {
+                $error_message = $error_data['message'];
+            } else {
+                $error_message = 'Unbekannter Fehler';
+            }
+            
+            debugging('Fehleranalyse - HTTP-Status: ' . $status . ', Fehlermeldung: ' . $error_message, DEBUG_DEVELOPER);
             
             // Build detailed error message based on HTTP status
             switch ($status) {
                 case 401:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
-                        'Authentifizierungsfehler: Der API-Schlüssel ist ungültig oder fehlt. ' .
-                        'Bitte überprüfen Sie den API-Schlüssel in den Einstellungen. Server-Antwort: ' . $error_message);
-                    
+                    $fehlermeldung = 'Authentifizierungsfehler: Der API-Schlüssel ist ungültig oder fehlt. ' .
+                        'Bitte überprüfen Sie den API-Schlüssel in den Einstellungen. Server-Antwort: ' . $error_message;
+                    break;
+                
                 case 403:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
-                        'Zugriff verweigert: Sie haben keine Berechtigung für diese Operation. ' .
-                        'Bitte kontaktieren Sie den Support. Server-Antwort: ' . $error_message);
+                    $fehlermeldung = 'Zugriff verweigert: Sie haben keine Berechtigung für diese Operation. ' .
+                        'Bitte kontaktieren Sie den Support oder überprüfen Sie Ihre Berechtigungen. Server-Antwort: ' . $error_message;
+                    break;
                     
                 case 404:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
-                        'Die angeforderte Ressource wurde nicht gefunden. ' .
-                        'Bitte überprüfen Sie den Lerncode oder die Einreichungs-ID. Server-Antwort: ' . $error_message);
+                    $fehlermeldung = 'Die angeforderte Ressource wurde nicht gefunden. ' .
+                        'Bitte überprüfen Sie den Lerncode oder die Einreichungs-ID. Server-Antwort: ' . $error_message;
+                    break;
                     
                 case 429:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
-                        'Zu viele Anfragen an die API. Bitte warten Sie einen Moment und versuchen Sie es erneut. ' .
-                        'Server-Antwort: ' . $error_message);
+                    $fehlermeldung = 'Zu viele Anfragen an die API. Bitte warten Sie einen Moment und versuchen Sie es erneut. ' .
+                        'Server-Antwort: ' . $error_message;
+                    break;
                     
                 case 500:
                 case 502:
                 case 503:
                 case 504:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
-                        'Ein Serverfehler ist bei klausurenweb.de aufgetreten. Bitte versuchen Sie es später erneut. ' .
-                        'HTTP-Status: ' . $status . '. Server-Antwort: ' . $error_message);
+                    $fehlermeldung = 'Ein Serverfehler ist bei klausurenweb.de aufgetreten. Bitte versuchen Sie es später erneut. ' .
+                        'HTTP-Status: ' . $status . '. Server-Antwort: ' . $error_message;
+                    break;
                     
                 default:
-                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
-                        'Ein unerwarteter Fehler ist aufgetreten. HTTP-Status: ' . $status . '. Server-Antwort: ' . $error_message);
+                    $fehlermeldung = 'Ein unerwarteter Fehler ist aufgetreten. HTTP-Status: ' . $status . '. Server-Antwort: ' . $error_message;
             }
+            
+            debugging('Finale Fehlermeldung: ' . $fehlermeldung, DEBUG_DEVELOPER);
+            throw new \moodle_exception('api_error', 'engelbrain', '', $fehlermeldung);
         }
         
         curl_close($ch);
@@ -245,7 +258,7 @@ class client {
         $response_data = json_decode($response, true);
         if ($response && $response_data === null) {
             debugging('Ungültiges JSON in der API-Antwort: ' . substr($response, 0, 500), DEBUG_DEVELOPER);
-            throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
+            throw new \moodle_exception('api_error', 'engelbrain', '', 
                 'Die Antwort von klausurenweb.de enthielt ungültiges JSON. Technische Details: ' . 
                 substr($response, 0, 200) . (strlen($response) > 200 ? '...' : ''));
         }

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Deutsche Übersetzung für engelbrain
+ * Deutsche Übersetzung für klausurenweb.de
  *
  * @package     mod_engelbrain
  * @category    string
@@ -25,32 +25,34 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['pluginname'] = 'engelbrain Integration';
-$string['modulename'] = 'engelbrain Aufgabe';
-$string['modulenameplural'] = 'engelbrain Aufgaben';
-$string['pluginadministration'] = 'engelbrain Administration';
+$string['pluginname'] = 'klausurenweb.de Integration';
+$string['modulename'] = 'klausurenweb.de Aufgabe';
+$string['modulenameplural'] = 'klausurenweb.de Aufgaben';
+$string['pluginadministration'] = 'klausurenweb.de Administration';
 
 // Einstellungen
-$string['settings_header'] = 'engelbrain Integrationseinstellungen';
+$string['settings_header'] = 'klausurenweb.de Integrationseinstellungen';
 $string['school_api_key'] = 'Schul-API-Schlüssel';
 $string['school_api_key_desc'] = 'Geben Sie den von klausurenweb.de bereitgestellten Schul-API-Schlüssel ein';
 $string['api_endpoint'] = 'API-Endpunkt';
-$string['api_endpoint_desc'] = 'Die Endpunkt-URL für die engelbrain-API';
+$string['api_endpoint_desc'] = 'Die Endpunkt-URL für die klausurenweb.de-API';
 $string['default_api_endpoint'] = 'https://klausurenweb.de/api/v1';
 
 // Aktivitätseinstellungen
 $string['teacher_api_key'] = 'Lehrer-API-Schlüssel';
 $string['teacher_api_key_desc'] = 'Geben Sie Ihren persönlichen Lehrer-API-Schlüssel ein';
+$string['teacher_api_key_help'] = 'Dies ist Ihr persönlicher Lehrer-API-Schlüssel, den Sie von klausurenweb.de erhalten haben. Er wird benötigt, um Aufgaben mit Ihrem Lehrer-Konto zu verknüpfen.';
 $string['lerncode'] = 'Lerncode';
-$string['lerncode_desc'] = 'Geben Sie den engelbrain-Lerncode für diese Aufgabe ein';
+$string['lerncode_desc'] = 'Geben Sie den klausurenweb.de-Lerncode für diese Aufgabe ein';
+$string['lerncode_help'] = 'Der Lerncode ist eine eindeutige Kennung für die Aufgabe in klausurenweb.de. Schüler verwenden diesen Code, um auf die zugewiesene Aufgabe zuzugreifen.';
 
 // Einreichungsbezogen
-$string['submit_to_engelbrain'] = 'An engelbrain übermitteln';
-$string['submission_successful'] = 'Erfolgreich an engelbrain übermittelt';
-$string['submission_failed'] = 'Übermittlung an engelbrain fehlgeschlagen: {$a}';
-$string['feedback_from_engelbrain'] = 'Feedback von engelbrain';
+$string['submit_to_engelbrain'] = 'An klausurenweb.de übermitteln';
+$string['submission_successful'] = 'Erfolgreich an klausurenweb.de übermittelt';
+$string['submission_failed'] = 'Übermittlung an klausurenweb.de fehlgeschlagen: {$a}';
+$string['feedback_from_engelbrain'] = 'Feedback von klausurenweb.de';
 
 // Datenschutz
-$string['privacy:metadata:engelbrain'] = 'Um mit engelbrain zu integrieren, müssen Benutzerdaten mit diesem Dienst ausgetauscht werden.';
-$string['privacy:metadata:engelbrain:userid'] = 'Die Benutzer-ID wird von Moodle gesendet, damit Sie auf Ihre Daten auf engelbrain zugreifen können.';
-$string['privacy:metadata:engelbrain:submissioncontent'] = 'Der Inhalt Ihrer Einreichungen wird zur Verarbeitung an engelbrain gesendet.'; 
+$string['privacy:metadata:engelbrain'] = 'Um mit klausurenweb.de zu integrieren, müssen Benutzerdaten mit diesem Dienst ausgetauscht werden.';
+$string['privacy:metadata:engelbrain:userid'] = 'Die Benutzer-ID wird von Moodle gesendet, damit Sie auf Ihre Daten auf klausurenweb.de zugreifen können.';
+$string['privacy:metadata:engelbrain:submissioncontent'] = 'Der Inhalt Ihrer Einreichungen wird zur Verarbeitung an klausurenweb.de gesendet.'; 

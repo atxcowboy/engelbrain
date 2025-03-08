@@ -51,14 +51,14 @@ class submission_form extends moodleform {
         
         // Check if required data is available
         if (!isset($this->_customdata['engelbrain']) || !isset($this->_customdata['cm'])) {
-            throw new \moodle_exception('missingparameter', 'mod_engelbrain');
+            throw new \moodle_exception('requiredelement', 'core_form');
         }
         
         $engelbrain = $this->_customdata['engelbrain'];
         $cm = $this->_customdata['cm'];
         
         if (!is_object($cm) || !isset($cm->id)) {
-            throw new \moodle_exception('invalidcoursemodule', 'mod_engelbrain');
+            throw new \moodle_exception('invalidmodule', 'error');
         }
         
         // Füge das ID-Feld hinzu

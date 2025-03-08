@@ -77,7 +77,7 @@ $string['privacy:metadata:engelbrain:submissioncontent'] = 'The content of your 
 // Error messages
 $string['missingparameter'] = 'Missing required parameter';
 $string['invalidcoursemodule'] = 'Invalid course module';
-$string['api_error'] = '{$a}';
+$string['api_error'] = 'Error communicating with klausurenweb.de: {$a}';
 $string['api_error_unknown'] = 'Unknown API error (HTTP code: {$a})';
 $string['api_error_invalid_json'] = 'Invalid response from klausurenweb.de server';
 $string['unsupported_http_method'] = 'Unsupported HTTP method';

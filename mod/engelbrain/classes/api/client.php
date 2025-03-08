@@ -174,22 +174,22 @@ class client {
             // Handle specific curl errors with user-friendly messages
             switch ($curl_errno) {
                 case CURLE_OPERATION_TIMEOUTED:
-                    throw new \moodle_exception('api_error', 'engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
                         'Zeitüberschreitung bei der Verbindung zu klausurenweb.de. Die LLM-Verarbeitung kann bis zu 5 Minuten dauern. ' .
                         'Bitte versuchen Sie es erneut oder prüfen Sie später das Ergebnis. Technische Details: ' . $curl_error);
                     
                 case CURLE_COULDNT_CONNECT:
-                    throw new \moodle_exception('api_error', 'engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
                         'Verbindung zu klausurenweb.de konnte nicht hergestellt werden. Bitte prüfen Sie Ihre Internetverbindung ' .
                         'oder versuchen Sie es später erneut. Technische Details: ' . $curl_error);
                     
                 case CURLE_COULDNT_RESOLVE_HOST:
-                    throw new \moodle_exception('api_error', 'engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
                         'Der Server "klausurenweb.de" konnte nicht gefunden werden. Bitte prüfen Sie Ihre DNS-Einstellungen ' .
                         'oder versuchen Sie es später erneut. Technische Details: ' . $curl_error);
                     
                 default:
-                    throw new \moodle_exception('api_error', 'engelbrain', '', 
+                    throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
                         'Ein Fehler ist bei der Verbindung zu klausurenweb.de aufgetreten. Fehlercode: ' . $curl_errno . 
                         '. Technische Details: ' . $curl_error);
             }
@@ -249,7 +249,7 @@ class client {
             }
             
             debugging('Finale Fehlermeldung: ' . $fehlermeldung, DEBUG_DEVELOPER);
-            throw new \moodle_exception('api_error', 'engelbrain', '', $fehlermeldung);
+            throw new \moodle_exception('api_error', 'mod_engelbrain', '', $fehlermeldung);
         }
         
         curl_close($ch);
@@ -258,7 +258,7 @@ class client {
         $response_data = json_decode($response, true);
         if ($response && $response_data === null) {
             debugging('Ungültiges JSON in der API-Antwort: ' . substr($response, 0, 500), DEBUG_DEVELOPER);
-            throw new \moodle_exception('api_error', 'engelbrain', '', 
+            throw new \moodle_exception('api_error', 'mod_engelbrain', '', 
                 'Die Antwort von klausurenweb.de enthielt ungültiges JSON. Technische Details: ' . 
                 substr($response, 0, 200) . (strlen($response) > 200 ? '...' : ''));
         }

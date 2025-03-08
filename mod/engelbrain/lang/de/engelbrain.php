@@ -77,7 +77,7 @@ $string['privacy:metadata:engelbrain:submissioncontent'] = 'Der Inhalt Ihrer Ein
 // Fehlermeldungen
 $string['missingparameter'] = 'Fehlender erforderlicher Parameter';
 $string['invalidcoursemodule'] = 'Ungültiges Kursmodul';
-$string['api_error'] = '{$a}';
+$string['api_error'] = 'Fehler bei der Kommunikation mit klausurenweb.de: {$a}';
 $string['api_error_unknown'] = 'Unbekannter API-Fehler (HTTP Code: {$a})';
 $string['api_error_invalid_json'] = 'Ungültige Antwort vom klausurenweb.de-Server';
 $string['unsupported_http_method'] = 'Nicht unterstützte HTTP-Methode'; 

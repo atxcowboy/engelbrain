@@ -1,7 +1,4 @@
-# klausurenweb.de - Intelligente Textbewertung in Moodle
-
-<<<<<<< HEAD
-klausurenweb.de ist ein Moodle-Plugin, das klausurenweb.de — ein automatisiertes, KI-unterstütztes Feedback- und Bewertungstool für sowohl handschriftliche als auch getippte Schülertexte — nahtlos in Ihre Moodle-Umgebung integriert. Durch die Nutzung der klausurenweb.de-API vereinfacht klausurenweb.de das Feedback zu Prüfungen, reduziert den Bewertungsaufwand und bietet zeitnahe Einblicke zur Verbesserung des Lernens und der Leistung der Schüler.
+![Engel Brain Logo](engelbrain.png)
 =======
 _This README is available in both English and German._
 
